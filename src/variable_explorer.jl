@@ -427,12 +427,12 @@ end
 
 # ╔═╡ e89b9049-b557-4cae-b520-faa8c2ede58d
 let
-    d = notebook_topology(topology, notebook_cells, cell_exprs; show_type=true)
+    # d = notebook_topology(topology, notebook_cells, cell_exprs; show_type=true)
 	# [parentmodule.(v) for v in values(d)]
 	# parentmodule.(d)
-	workspace_name = Symbol("workspace#$(PlutoRunner.moduleworkspace_count.x)")
-	ws = getfield(Main, workspace_name)
-	ws_definitions = Set(names(getfield(PlutoRunner.Main, workspace_name), imported = true))
+	# workspace_name = Symbol("workspace#$(PlutoRunner.moduleworkspace_count.x)")
+	# ws = getfield(Main, workspace_name)
+	# ws_definitions = Set(names(getfield(PlutoRunner.Main, workspace_name), imported = true))
 	# which(ws, Symbol("@htl"))
 	# function symbol_module(s, ws, ws_defintions)
 	# 	(s in ws_definitions) && return Main
@@ -446,10 +446,10 @@ let
 end
 
 # ╔═╡ d56bc150-a70a-423d-abb1-014dd7b60e30
-names(PlutoRunner, all = true)
+# names(PlutoRunner, all = true)
 
 # ╔═╡ 96a7123e-fb97-49db-89b8-079ad89203f4
-names(PlutoRunner.Main)
+# names(PlutoRunner.Main)
 
 # ╔═╡ f0409d12-cdd9-4f0c-b5ec-c737c06e9407
 @bind x Slider(LinRange(-1, 1, 100))
@@ -501,9 +501,9 @@ bb = b*35
 
 # ╔═╡ c461b2cd-6dfc-447d-8417-0ef4e272d399
 let
-    workspace_name = Symbol("workspace#$(PlutoRunner.moduleworkspace_count.x)")
-	ws = getfield(Main, workspace_name)
-	PlutoRunner.binding_from(:x, ws)
+ #    workspace_name = Symbol("workspace#$(PlutoRunner.moduleworkspace_count.x)")
+	# ws = getfield(Main, workspace_name)
+	# PlutoRunner.binding_from(:x, ws)
 	# PlutoRunner.registered_bond_elements[:b]
 end
 
