@@ -445,12 +445,6 @@ let
 	# Dict(k => [symbol_module(s, ws, ws_definitions) for s in v] for (k, v) in d)
 end
 
-# ╔═╡ d56bc150-a70a-423d-abb1-014dd7b60e30
-names(PlutoRunner, all = true)
-
-# ╔═╡ 96a7123e-fb97-49db-89b8-079ad89203f4
-names(PlutoRunner.Main)
-
 # ╔═╡ f0409d12-cdd9-4f0c-b5ec-c737c06e9407
 @bind x Slider(LinRange(-1, 1, 100))
 
@@ -900,8 +894,6 @@ version = "17.4.0+2"
 # ╠═53a03bbe-eb49-46bd-8a36-6a972e221ba9
 # ╠═4cc19a3e-9619-4eec-b24a-6a362eb31fce
 # ╠═e89b9049-b557-4cae-b520-faa8c2ede58d
-# ╠═d56bc150-a70a-423d-abb1-014dd7b60e30
-# ╠═96a7123e-fb97-49db-89b8-079ad89203f4
 # ╠═f0409d12-cdd9-4f0c-b5ec-c737c06e9407
 # ╠═2ab2ba22-002b-4787-819a-13303ef10696
 # ╠═efed74f4-d689-46d8-9138-41634fb47d0b
