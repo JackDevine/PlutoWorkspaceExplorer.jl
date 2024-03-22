@@ -1,5 +1,8 @@
 module PlutoVariableExplorer
 
-greet() = print("Hello World!")
+export variable_explorer,
+    update_notebook
+
+include("variable_explorer.jl")
 
 end # module PlutoVariableExplorer
