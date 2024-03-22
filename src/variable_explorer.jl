@@ -358,9 +358,9 @@ function notebook_topology(old_topology, old_notebook, old_cells, mod; show_type
 end
 
 # ╔═╡ 6d97aaae-f1e4-47e5-a376-19b87f48df7f
-function variable_explorer(old_topology, old_notebook, old_cells; show_type=true)
+function variable_explorer(old_topology, old_notebook, old_cells, mod; show_type=true)
 	variables, functions, modules, new_topology, new_notebook, new_cells = notebook_topology(
-		old_topology, old_notebook, old_cells;
+		old_topology, old_notebook, old_cells, mod;
 		show_type
 	)
 	variable_explorer_html = @htl(
