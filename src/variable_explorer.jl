@@ -233,9 +233,9 @@ function symbol_module(s, ws)
 end
 
 # ╔═╡ 4cc19a3e-9619-4eec-b24a-6a362eb31fce
-function notebook_topology(old_topology, old_notebook, old_cells; show_type=true)
+function notebook_topology(old_topology, old_notebook, old_cells, mod; show_type=true)
 	cell_exprs = [expr.expanded_expr
-	              for expr in values(PlutoRunner.cell_expanded_exprs)]
+	              for expr in values(mod.cell_expanded_exprs)]
 	updated_cell_exprs = setdiff(cell_exprs, old_cells)
 	deleted_cells = setdiff(old_cells, cell_exprs)
 	
@@ -286,7 +286,7 @@ function notebook_topology(old_topology, old_notebook, old_cells; show_type=true
 		end
 	end
 	
-	workspace_name = Symbol("workspace#$(PlutoRunner.moduleworkspace_count.x)")
+	workspace_name = Symbol("workspace#$(mod.moduleworkspace_count.x)")
 	ws = getfield(Main, workspace_name)
 	variables = [try getfield(ws, var) catch nothing end for var in definitions]
 
@@ -446,10 +446,10 @@ let
 end
 
 # ╔═╡ d56bc150-a70a-423d-abb1-014dd7b60e30
-# names(PlutoRunner, all = true)
+names(PlutoRunner, all = true)
 
 # ╔═╡ 96a7123e-fb97-49db-89b8-079ad89203f4
-# names(PlutoRunner.Main)
+names(PlutoRunner.Main)
 
 # ╔═╡ f0409d12-cdd9-4f0c-b5ec-c737c06e9407
 @bind x Slider(LinRange(-1, 1, 100))
