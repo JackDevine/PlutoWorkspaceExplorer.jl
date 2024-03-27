@@ -14,20 +14,41 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 384fbd82-8400-4d58-870a-282f7f4f6730
-using PlutoLinks: @revise
-
-# ╔═╡ 3b66f142-647a-4c3e-a650-0a45cbd85701
+# ╔═╡ 83633d03-c6a1-408b-86a4-4ae0bf692eb3
 begin
-	dir = "/root/Projects/PlutoVariableExplorer.jl"  # Change to location where your clone is
     using Pkg
-    Pkg.activate(dir)
-	Pkg.add(["HypertextLiteral", "Primes", "Symbolics"])
+	Pkg.add(url="https://github.com/JackDevine/PlutoVariableExplorer.jl")
+    Pkg.add(["HypertextLiteral", "Primes", "Symbolics"])
 	
-	@revise using PlutoVariableExplorer
+	using PlutoVariableExplorer
 	const PVE = PlutoVariableExplorer
 	using HypertextLiteral, Primes, Symbolics
 end
+
+# ╔═╡ 8a5ec35c-b235-412b-9cb5-17514736a31c
+md"""
+## Uncomment these two cells for development
+"""
+
+# ╔═╡ 384fbd82-8400-4d58-870a-282f7f4f6730
+# using PlutoLinks: @revise
+
+# ╔═╡ 3b66f142-647a-4c3e-a650-0a45cbd85701
+# begin
+# 	dir = "/root/Projects/PlutoVariableExplorer.jl"  # Change to location where your clone is
+#     using Pkg
+#     Pkg.activate(dir)
+# 	Pkg.add(["HypertextLiteral", "Primes", "Symbolics"])
+	
+# 	@revise using PlutoVariableExplorer
+# 	const PVE = PlutoVariableExplorer
+# 	using HypertextLiteral, Primes, Symbolics
+# end
+
+# ╔═╡ 44a6a78e-e6a3-4957-9549-84d192a11d83
+md"""
+Using the variable explorer is a two step process. First, bind a variable to the `update_notebook` event. Then create a cell depending on the `update_notebook` event and start a variable explorer in that cell.
+"""
 
 # ╔═╡ 236ffc2b-6a2e-4023-b9dd-6d34ea2c5d4d
 @bind _update PVE.update_notebook()
@@ -48,7 +69,7 @@ arr = randn(30, 30)*y
 nested_dict = Dict(:x => x, :k => Dict(:y => y))
 
 # ╔═╡ 890a0072-a4f1-45e6-9d7e-8d43bcffcda6
-text = repeat(" hallo!", 3)
+text = repeat(" hello!", 3)
 
 # ╔═╡ 27a67c8c-fe4c-46f0-be7e-5dbb658898fa
 h = @htl("""<h1 style="color: green">$(text)</h1>""")
@@ -66,8 +87,11 @@ n = 1000
 prod_error = prod(p^2/(p^2-1) for p in primes(n)) - π^2/6
 
 # ╔═╡ Cell order:
+# ╟─8a5ec35c-b235-412b-9cb5-17514736a31c
 # ╠═384fbd82-8400-4d58-870a-282f7f4f6730
 # ╠═3b66f142-647a-4c3e-a650-0a45cbd85701
+# ╠═83633d03-c6a1-408b-86a4-4ae0bf692eb3
+# ╟─44a6a78e-e6a3-4957-9549-84d192a11d83
 # ╠═236ffc2b-6a2e-4023-b9dd-6d34ea2c5d4d
 # ╠═5ccaeff5-96f2-4f3a-a4b8-a58d8192bbda
 # ╠═0bdfc314-20aa-41ac-aaf2-da1187a76a67
