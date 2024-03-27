@@ -4,16 +4,6 @@
 using Markdown
 using InteractiveUtils
 
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
-        el
-    end
-end
-
 # ╔═╡ ba2e5540-daf7-11ee-2331-8dd584384545
 begin
 	using HypertextLiteral
@@ -22,9 +12,6 @@ begin
 	import Tables
 	using PlutoUI
 end
-
-# ╔═╡ a9e313a8-3d7e-4aed-9155-e7edfbae7136
-# using Symbolics
 
 # ╔═╡ ad8d2302-d50b-46fb-b46d-e5704e8e847b
 function update_notebook()
@@ -35,6 +22,7 @@ function update_notebook()
 	let span = currentScript.parentElement
 	document.addEventListener("keydown", (e) => {
 	    if (e.key == "Enter" && e.shiftKey) {
+	        console.log("Shift enter")
 	        span.value = editor_state.notebook.cell_inputs
 			span.dispatchEvent(new CustomEvent("input"))
 			e.preventDefault()
@@ -46,46 +34,21 @@ function update_notebook()
 	""")
 end
 
-# ╔═╡ 38e73f37-447f-46d6-a4aa-948849e5cd08
-@bind r update_notebook()
-
-# ╔═╡ b3047049-a79f-4bf5-b973-cf4daca8d8dd
-r
-
-# ╔═╡ 20b7d347-8059-429a-b065-5fd2e8b4240a
-begin
-	# cell_exprs = [expr.expanded_expr
-	#               for expr in values(PlutoRunner.cell_expanded_exprs)]
-	
-	# notebook_cells = [SimpleCell(code) for code in cell_exprs]
- #    topology = PDE.NotebookTopology{SimpleCell}()
-end
-
 # ╔═╡ dfd496ce-f776-446d-9be6-f1613ffeef56
 th(n) = @htl("""<th>$n</th>""")
 
 # ╔═╡ 4d13e91d-8bc0-49e0-9aa2-a933079697c0
-begin
-    td(n) = @htl("""<td><div><pre class="no-block">$n</pre></div></td>""")
-	# td(n) = @htl("""
-	# <td>
-	#   <div>
-	#     <div class="raw-html-output">
-	#       $n
-	#     </div>
-	#   </div>
-	# </td>""")
-end
+td(n) = @htl("""<td><div><pre class="no-block">$n</pre></div></td>""")
 
 # ╔═╡ 90298b52-5ce2-4d9b-af79-427dc4f9c401
-function render_variable_table_row(ind, data...)
+function render_variable_table_row(mod, ind, data...)
 	@htl("""
-	<tr>$((td(embed_display(data[j][ind])) for j in eachindex(data)))</tr>
+	<tr>$((td(mod.embed_display(data[j][ind])) for j in eachindex(data)))</tr>
 	""")
 end
 
 # ╔═╡ f4558a2f-c73e-4ecb-8431-5efb39627084
-function render_variable_table(t)
+function render_variable_table(mod, t)
 	headers = keys(t)
 	data = values(t)
 	n = length(first(data))
@@ -103,70 +66,11 @@ function render_variable_table(t)
 	<table class="pluto-table">
 	<thead><tr class="variable-schema-names">$((th(x) for x in headers))</tr></thead>
 	<tbody>
-	$((render_variable_table_row(i, data...) for i in 1:n))
+	$((render_variable_table_row(mod, i, data...) for i in 1:n))
 	</tbody>
 	</table>
 	""")
 end
-
-# ╔═╡ 092f419c-1b79-4bc1-b499-3dfce9d7edc7
-# @htl(
-# """
-# $(@bind r update_notebook())
-# $(variable_explorer())
-# """
-# )
-
-# ╔═╡ cdb0a858-1dd0-403a-8007-ea77e0df3289
-# @bind n update_notebook()
-
-# ╔═╡ df16c77e-efff-4028-a07a-6fc692e7b62e
-let
-	# n
-	# display(@bind _ update_notebook())
-    # variable_explorer()
-end
-
-# ╔═╡ b8029441-1e4c-438b-a76e-d29351270545
-# function variable_explorer()
-# 	@htl("""
-# 	<style>
-# 	.aside {
-# 	    position: fixed;
-# 	    top: 5rem;
-# 	    right: 1rem;
-# 	}
-# 	</style>
-	
-# 	<div class="aside">
-# 	<script>
-# 	const cell_inputs = editor_state.notebook.cell_inputs
-# 	const julia_variables = $(AbstractPlutoDingetjes.Display.with_js_link(notebook_topology))
-		
-# 	// I can now call sqrt_from_julia like a JavaScript function. It returns a Promise:
-# 	//const result = await sqrt_from_julia(9.0)
-# 	//console.log(result)
-# 	const variables = await julia_variables()
-# 	function variable_explorer_table(vars) {
-# 	    //const variables = await julia_variables()
-# 	    return `
-# 	    <table>
-# 			<tr><th>Name</th><th>Value</th></tr>
-# 			<tr><td>x</td><td>3</td></tr>
-# 		</table>`
-# 	}
-#     const div = currentScript.parentElement
-# 	div.innerHTML = variable_explorer_table(3)
-	
-# 	</script>
-# 	Hallo
-# 	</div>
-# 	""")
-# end
-	
-
-# ╔═╡ 871ff609-47a1-45dd-94d7-baf0829f297b
-# variable_explorer()
 
 # ╔═╡ b9bc658e-50a7-4860-b848-e8cda7f93e11
 begin
@@ -177,15 +81,14 @@ begin
 	SimpleCell(code::Expr) = SimpleCell(string(code), code)
 end
 
-# ╔═╡ 8cf59e08-91c1-4ddf-8176-52db345b5f97
-begin
-    r
+# ╔═╡ 6b2ccb16-7e54-4d07-b5be-134b6127b45d
+function variable_explorer(mod; args...)
 	cell_exprs = Expr[]
 	
 	notebook_cells = SimpleCell[SimpleCell(code) for code in cell_exprs]
     topology = PDE.NotebookTopology{SimpleCell}()
-	# explorer, topology, notebook_cells, cell_exprs = variable_explorer(topology, notebook_cells, cell_exprs; show_type=true)
-	# explorer
+
+	variable_explorer(topology, notebook_cells, cell_exprs, mod; args...)[1]
 end
 
 # ╔═╡ 7e63e520-7d60-4b6e-8668-b4efa4577948
@@ -205,9 +108,6 @@ begin
 	
 	function pluto_link(sym, t)
 		s = string(sym)
-		# @htl("""
-		# <a title="Ctrl-Click to jump to the definition of $s." data-pluto-variable="$s" href="#$s"><span class="ͼo ͼ12">$s</span></a>
-		# """)
 
 		pluto_link_str = get_pluto_link_str(s)
 		HTML(pluto_link_str*"""<span class="ͼo ͼ14">::</span><span class="ͼo ͼ13">$(t)</span>""")
@@ -241,23 +141,6 @@ function notebook_topology(old_topology, old_notebook, old_cells, mod; show_type
 	
 	updated_notebook_cells = SimpleCell[SimpleCell(code) for code in updated_cell_exprs]
 	
-	
-	# @time topology = PDE.updated_topology(
-	# 	old_topology,
-	# 	old_notebook,
-	# 	updated_notebook_cells;
-	
-	# 	get_code_str = c -> c.code,
-	# 	get_code_expr = c -> c.expanded_expr,
-	# )
-	# topology = PDE.updated_topology(
-	# 	old_topology,
-	# 	SimpleCell.(cell_exprs),
-	# 	SimpleCell.(cell_exprs);
-	
-	# 	get_code_str = c -> c.code,
-	# 	get_code_expr = c -> c.expanded_expr,
-	# )
 	topology = PDE.updated_topology(
 		old_topology,
 		[old_notebook; updated_notebook_cells],
@@ -328,28 +211,20 @@ function notebook_topology(old_topology, old_notebook, old_cells, mod; show_type
 		pluto_link.(definitions[is_variable])
 	end
 
-	# v = variable_table(:Name => variable_definition_html,
-	# 	:Value => variables[is_variable],
-	# 	:Dependencies => dependency_list[is_variable],
-	# 	:Prependencies => prependency_list[is_variable]
-	# ) |> embed_display
-	v = render_variable_table(
+	v = render_variable_table(mod,
 		(;Name = variable_definition_html,
 		Value = variables[is_variable],
 		Dependencies = dependency_list[is_variable],
 		Prependencies = prependency_list[is_variable])
 	)
- #    f = variable_table(:Name => pluto_link.(definitions[is_function]),
-	# 	:Dependencies => dependency_list[is_function],
-	# 	:Prependencies => prependency_list[is_function]
-	# )
-	f = render_variable_table(
+
+	f = render_variable_table(mod,
 		(;Name = pluto_link.(definitions[is_function]),
 		Dependencies = dependency_list[is_function],
 		Prependencies = prependency_list[is_function])
 	)
-	# m = embed_display(pluto_link.(definitions[is_module]))
-	m = render_variable_table(
+
+	m = render_variable_table(mod,
 		(;Name = pluto_link.(definitions[is_module]),
 		Prependencies = prependency_list[is_module])
 	)
@@ -403,7 +278,7 @@ function variable_explorer(old_topology, old_notebook, old_cells, mod; show_type
 		<script>
 		    const left_arrow = `<img src="https://cdn.jsdelivr.net/gh/ionic-team/ionicons@5.5.1/src/svg/arrow-back-outline.svg" style="height: 1.5em; width: 1.5em;">`
 			const right_arrow = `<img src="https://cdn.jsdelivr.net/gh/ionic-team/ionicons@5.5.1/src/svg/arrow-forward-outline.svg" style="height: 1.5em; width: 1.5em">`
-			const span = currentScript.parentElement
+	        let span = currentScript.parentElement
 			const button = span.querySelector("button")
 			button.innerHTML = left_arrow
 		
@@ -424,122 +299,6 @@ function variable_explorer(old_topology, old_notebook, old_cells, mod; show_type
 	""")
 	variable_explorer_html, new_topology, new_notebook, new_cells
 end
-
-# ╔═╡ e89b9049-b557-4cae-b520-faa8c2ede58d
-let
-    # d = notebook_topology(topology, notebook_cells, cell_exprs; show_type=true)
-	# [parentmodule.(v) for v in values(d)]
-	# parentmodule.(d)
-	# workspace_name = Symbol("workspace#$(PlutoRunner.moduleworkspace_count.x)")
-	# ws = getfield(Main, workspace_name)
-	# ws_definitions = Set(names(getfield(PlutoRunner.Main, workspace_name), imported = true))
-	# which(ws, Symbol("@htl"))
-	# function symbol_module(s, ws, ws_defintions)
-	# 	(s in ws_definitions) && return Main
-	# 	try
-	# 	    which(ws, s)
-	# 	catch
-	# 		Main
-	# 	end
-	# end
-	# Dict(k => [symbol_module(s, ws, ws_definitions) for s in v] for (k, v) in d)
-end
-
-# ╔═╡ f0409d12-cdd9-4f0c-b5ec-c737c06e9407
-@bind x Slider(LinRange(-1, 1, 100))
-
-# ╔═╡ 2ab2ba22-002b-4787-819a-13303ef10696
-y = 400*x
-
-# ╔═╡ efed74f4-d689-46d8-9138-41634fb47d0b
-foobar = 4
-
-# ╔═╡ 808bf0ea-088f-4a26-8940-a9fe7939d259
-baz = 55*x*y*foobar
-
-# ╔═╡ 9f492370-f6c3-47d7-9180-6edadbc4b0bd
-z = x*y*randn(50, 50)
-
-# ╔═╡ e203d1c5-3e03-4711-9fc9-8996bb54c82c
-# GC.gc()
-
-# ╔═╡ 0f4b2e48-df18-44b0-83ee-08eacbdbc310
-text = repeat("hallo!! ", 2)
-
-# ╔═╡ 9f98c90a-1e19-4789-89db-b6ad2275f296
-h = @htl("""<h1 style="color: green">$(text)</h1>""")
-
-# ╔═╡ 5ab8cf23-cf08-4c99-ae93-25d3d164108a
-bar = Dict(:k => x, :d => Dict(:k2 => y, :k3 => Dict(:k => 3)))
-
-# ╔═╡ 37836c9a-be21-4c70-8527-6500aae1a2fe
-@bind b Slider(LinRange(-2, 2, 100))
-
-# ╔═╡ b7c4ea8d-1b69-42e0-a3e2-f0905f8117f2
-bb = b*35
-
-# ╔═╡ f69bbd3d-4117-4ce3-bb26-739f676cefda
-😀 = "Emojis are fine too 😀"
-
-# ╔═╡ 589afc9c-4f08-4424-8331-370aa3925b5a
-# @syms α::Real β::Real
-
-# ╔═╡ 9f3fe317-e78c-43ce-bd0a-2d44441b51fa
-# δ = α*β^2
-
-# ╔═╡ cccd3947-db5f-43de-b4c0-bcb441b894c5
-# δ/α
-
-# ╔═╡ cf37c69f-827b-4418-929b-60298a86aec2
-# @syms temperature
-
-# ╔═╡ c461b2cd-6dfc-447d-8417-0ef4e272d399
-let
- #    workspace_name = Symbol("workspace#$(PlutoRunner.moduleworkspace_count.x)")
-	# ws = getfield(Main, workspace_name)
-	# PlutoRunner.binding_from(:x, ws)
-	# PlutoRunner.registered_bond_elements[:b]
-end
-
-# ╔═╡ 89f0b442-e066-4612-9903-a4b953784cc5
-foldable = @htl("""
-<details style="border: 0px">
-	<summary>
-	Hi
-	</summary>
-Hallo
-</details>
-""")
-
-# ╔═╡ 1d0c82c6-460a-4e2b-910f-d85023b11c6c
-# using Primes
-
-# ╔═╡ dce84d13-b036-47f0-b07a-50f25c50d495
-n = 1000
-
-# ╔═╡ 8ab324e8-5bc3-4957-8d1f-2cf770ef6ca9
-# prod_error = prod(p^2/(p^2-1) for p in primes(n)) - π^2/6
-
-# ╔═╡ 9f3fddee-0e42-423f-b5db-b4522c6ff3e1
-# counter = begin
-# 	state, set_state = @use_state(0)
-
-# 	@use_effect([]) do
-# 		schedule(Task() do
-# 			while true
-# 				sleep(1)
-# 				set_state(function(previous_state)
-# 					previous_state + 1
-# 				end)
-# 			end
-# 		end)
-
-# 		# In the real world this should also return a cleanup function,
-# 		# More on that in the docs for @use_effect
-# 	end
-
-# 	state
-# end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -871,50 +630,18 @@ version = "17.4.0+2"
 
 # ╔═╡ Cell order:
 # ╠═ba2e5540-daf7-11ee-2331-8dd584384545
-# ╠═a9e313a8-3d7e-4aed-9155-e7edfbae7136
 # ╠═6d97aaae-f1e4-47e5-a376-19b87f48df7f
+# ╠═6b2ccb16-7e54-4d07-b5be-134b6127b45d
 # ╠═ad8d2302-d50b-46fb-b46d-e5704e8e847b
-# ╠═b3047049-a79f-4bf5-b973-cf4daca8d8dd
-# ╠═38e73f37-447f-46d6-a4aa-948849e5cd08
-# ╠═20b7d347-8059-429a-b065-5fd2e8b4240a
-# ╠═8cf59e08-91c1-4ddf-8176-52db345b5f97
 # ╠═dfd496ce-f776-446d-9be6-f1613ffeef56
 # ╠═4d13e91d-8bc0-49e0-9aa2-a933079697c0
 # ╠═90298b52-5ce2-4d9b-af79-427dc4f9c401
 # ╠═f4558a2f-c73e-4ecb-8431-5efb39627084
-# ╠═092f419c-1b79-4bc1-b499-3dfce9d7edc7
-# ╠═cdb0a858-1dd0-403a-8007-ea77e0df3289
-# ╠═df16c77e-efff-4028-a07a-6fc692e7b62e
-# ╠═b8029441-1e4c-438b-a76e-d29351270545
-# ╠═871ff609-47a1-45dd-94d7-baf0829f297b
 # ╠═b9bc658e-50a7-4860-b848-e8cda7f93e11
 # ╠═7e63e520-7d60-4b6e-8668-b4efa4577948
 # ╠═aa0457b7-eb46-416e-8619-5e98babb4c91
 # ╠═4b595e45-2b87-4a9c-bb79-fe558ccbea8a
 # ╠═53a03bbe-eb49-46bd-8a36-6a972e221ba9
 # ╠═4cc19a3e-9619-4eec-b24a-6a362eb31fce
-# ╠═e89b9049-b557-4cae-b520-faa8c2ede58d
-# ╠═f0409d12-cdd9-4f0c-b5ec-c737c06e9407
-# ╠═2ab2ba22-002b-4787-819a-13303ef10696
-# ╠═efed74f4-d689-46d8-9138-41634fb47d0b
-# ╠═808bf0ea-088f-4a26-8940-a9fe7939d259
-# ╠═9f492370-f6c3-47d7-9180-6edadbc4b0bd
-# ╠═e203d1c5-3e03-4711-9fc9-8996bb54c82c
-# ╠═0f4b2e48-df18-44b0-83ee-08eacbdbc310
-# ╠═9f98c90a-1e19-4789-89db-b6ad2275f296
-# ╠═5ab8cf23-cf08-4c99-ae93-25d3d164108a
-# ╠═37836c9a-be21-4c70-8527-6500aae1a2fe
-# ╠═b7c4ea8d-1b69-42e0-a3e2-f0905f8117f2
-# ╠═f69bbd3d-4117-4ce3-bb26-739f676cefda
-# ╠═589afc9c-4f08-4424-8331-370aa3925b5a
-# ╠═9f3fe317-e78c-43ce-bd0a-2d44441b51fa
-# ╠═cccd3947-db5f-43de-b4c0-bcb441b894c5
-# ╠═cf37c69f-827b-4418-929b-60298a86aec2
-# ╠═c461b2cd-6dfc-447d-8417-0ef4e272d399
-# ╠═89f0b442-e066-4612-9903-a4b953784cc5
-# ╠═1d0c82c6-460a-4e2b-910f-d85023b11c6c
-# ╠═dce84d13-b036-47f0-b07a-50f25c50d495
-# ╠═8ab324e8-5bc3-4957-8d1f-2cf770ef6ca9
-# ╠═9f3fddee-0e42-423f-b5db-b4522c6ff3e1
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
