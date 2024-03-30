@@ -19,3 +19,5 @@ If you dont create the `_update` variable, then the variable explorer will only 
 Example view of the variable explorer:
 ![image](https://github.com/JackDevine/PlutoVariableExplorer.jl/assets/8610352/dc1f6cb2-2cef-47ca-b9ea-d9f1e1802fdc)
 
+https://github.com/JackDevine/PlutoVariableExplorer.jl/assets/8610352/e5a8c622-6086-44c1-a01e-e5965fccbd22
+
