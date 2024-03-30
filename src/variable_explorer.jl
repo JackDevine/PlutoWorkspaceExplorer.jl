@@ -23,12 +23,12 @@ function update_notebook()
 	document.addEventListener("keydown", (e) => {
 	    if (e.key == "Enter" && e.shiftKey) {
 	        console.log("Shift enter")
-	        span.value = nothing
+	        span.value = null
 			span.dispatchEvent(new CustomEvent("input"))
 			e.preventDefault()
 	    }
 	})
-	span.value = {}
+	span.value = null
 	</script>
 	</span>
 	""")
