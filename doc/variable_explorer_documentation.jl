@@ -14,13 +14,17 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 83633d03-c6a1-408b-86a4-4ae0bf692eb3
+# ╔═╡ 384fbd82-8400-4d58-870a-282f7f4f6730
+using PlutoLinks: @revise
+
+# ╔═╡ 3b66f142-647a-4c3e-a650-0a45cbd85701
 begin
-    using Pkg
-	Pkg.add(url="https://github.com/JackDevine/PlutoVariableExplorer.jl")
-    Pkg.add(["HypertextLiteral", "Primes", "Symbolics"])
+	dir = "/root/Projects/PlutoVariableExplorer.jl"  # Change to location where your clone is
+    import Pkg
+	Pkg.add(["HypertextLiteral", "Primes", "Symbolics"])
+    Pkg.activate(dir)
 	
-	using PlutoVariableExplorer
+	@revise using PlutoVariableExplorer
 	const PVE = PlutoVariableExplorer
 	using HypertextLiteral, Primes, Symbolics
 end
@@ -30,17 +34,13 @@ md"""
 ## Uncomment these two cells for development
 """
 
-# ╔═╡ 384fbd82-8400-4d58-870a-282f7f4f6730
-# using PlutoLinks: @revise
-
-# ╔═╡ 3b66f142-647a-4c3e-a650-0a45cbd85701
+# ╔═╡ 83633d03-c6a1-408b-86a4-4ae0bf692eb3
 # begin
-# 	dir = "/root/Projects/PlutoVariableExplorer.jl"  # Change to location where your clone is
 #     using Pkg
-#     Pkg.activate(dir)
-# 	Pkg.add(["HypertextLiteral", "Primes", "Symbolics"])
+# 	Pkg.add(url="https://github.com/JackDevine/PlutoVariableExplorer.jl")
+#     Pkg.add(["HypertextLiteral", "Primes", "Symbolics"])
 	
-# 	@revise using PlutoVariableExplorer
+# 	using PlutoVariableExplorer
 # 	const PVE = PlutoVariableExplorer
 # 	using HypertextLiteral, Primes, Symbolics
 # end
@@ -69,7 +69,7 @@ arr = randn(30, 30)*y
 nested_dict = Dict(:x => x, :k => Dict(:y => y))
 
 # ╔═╡ 890a0072-a4f1-45e6-9d7e-8d43bcffcda6
-text = repeat(" hello!", 3)
+text = "Hello!"
 
 # ╔═╡ 27a67c8c-fe4c-46f0-be7e-5dbb658898fa
 h = @htl("""<h1 style="color: green">$(text)</h1>""")
@@ -84,7 +84,17 @@ h = @htl("""<h1 style="color: green">$(text)</h1>""")
 n = 1000
 
 # ╔═╡ 1249e460-9ca4-4a6e-b302-3380e7c1e989
-prod_error = prod(p^2/(p^2-1) for p in primes(n)) - π^2/6
+prime_product_error(n) = prod(p^2/(p^2-1) for p in primes(n)) - π^2/6
+
+# ╔═╡ 1fc0f0d8-4217-4d8c-b55b-3be30ae88f0b
+product_error = prime_product_error(n)
+
+# ╔═╡ a476b103-a9df-4256-a0c5-78abbae10ffa
+let
+	workspace_name = Symbol("workspace#$(PlutoRunner.moduleworkspace_count.x)")
+	ws = getfield(Main, workspace_name)
+	contains(string(nameof(PVE.symbol_module(:n, ws))), "workspace#")
+end
 
 # ╔═╡ Cell order:
 # ╟─8a5ec35c-b235-412b-9cb5-17514736a31c
@@ -104,3 +114,5 @@ prod_error = prod(p^2/(p^2-1) for p in primes(n)) - π^2/6
 # ╠═56e65b46-c7a6-4cad-b73a-b0810b887db6
 # ╠═fe6a966e-235f-463f-98c4-327072ecaf3d
 # ╠═1249e460-9ca4-4a6e-b302-3380e7c1e989
+# ╠═1fc0f0d8-4217-4d8c-b55b-3be30ae88f0b
+# ╠═a476b103-a9df-4256-a0c5-78abbae10ffa

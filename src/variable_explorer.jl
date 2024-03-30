@@ -48,11 +48,13 @@ function render_variable_table_row(mod, ind, data...)
 end
 
 # ╔═╡ f4558a2f-c73e-4ecb-8431-5efb39627084
-function render_variable_table(mod, t)
+function render_variable_table(mod, title, t)
 	headers = keys(t)
 	data = values(t)
 	n = length(first(data))
+	n == 0 && return @htl("")
 	@htl("""
+	<h4>$(title)</h4>
 	<style>
 	table.pluto-table .variable-schema-names th {
 	    background-color: white;
@@ -132,8 +134,20 @@ function symbol_module(s, ws)
 	end
 end
 
+# ╔═╡ d4f46be8-2593-4b78-8873-a5466f46990e
+function show_symbol(sym, ws, exclude_dependencies, show_pluto_modules)
+    in_excluded_modules = symbol_module(sym, ws) in exclude_dependencies
+	pluto_module = contains(string(sym), "workspace#")
+
+	!in_excluded_modules && (pluto_module == show_pluto_modules)
+end
+
 # ╔═╡ 4cc19a3e-9619-4eec-b24a-6a362eb31fce
-function notebook_topology(old_topology, old_notebook, old_cells, mod; show_type=true)
+function notebook_topology(old_topology, old_notebook, old_cells, mod;
+    show_type=true,
+	exclude_dependencies=[Base, Core],
+    show_pluto_modules=false
+)
 	cell_exprs = [expr.expanded_expr
 	              for expr in values(mod.cell_expanded_exprs)]
 	updated_cell_exprs = setdiff(cell_exprs, old_cells)
@@ -187,18 +201,29 @@ function notebook_topology(old_topology, old_notebook, old_cells, mod; show_type
 			)
 		end
 	end
+
+	dependencies = Dict(
+		k => filter(
+			sym -> show_symbol(sym, ws, exclude_dependencies, show_pluto_modules),
+			v
+		)
+		for (k, v) in dependencies
+	)
 	
 	dependency_list = [pluto_link.(get(dependencies, def, Set(Symbol[]))) for def in definitions]
 	prependency_list = [pluto_link.(get(prependencies, def, Set(Symbol[]))) for def in definitions]
 
 	is_variable = fill(false, size(definitions))
 	is_function = copy(is_variable)
+	is_datatype = copy(is_variable)
 	is_module = copy(is_variable)
     for (i, variable) in enumerate(variables)
 		if variable isa Function
 			is_function[i] = true
 		elseif variable isa Module
 			is_module[i] = true
+		elseif variable isa DataType
+			is_datatype[i] = true
 		else
 			is_variable[i] = true
 		end
@@ -211,7 +236,10 @@ function notebook_topology(old_topology, old_notebook, old_cells, mod; show_type
 		pluto_link.(definitions[is_variable])
 	end
 
+	# TODO add a new category for DataType
+
 	v = render_variable_table(mod,
+		"Variables",
 		(;Name = variable_definition_html,
 		Value = variables[is_variable],
 		Dependencies = dependency_list[is_variable],
@@ -219,24 +247,37 @@ function notebook_topology(old_topology, old_notebook, old_cells, mod; show_type
 	)
 
 	f = render_variable_table(mod,
+		"Functions/macros",
 		(;Name = pluto_link.(definitions[is_function]),
 		Dependencies = dependency_list[is_function],
 		Prependencies = prependency_list[is_function])
 	)
 
+	t = render_variable_table(mod,
+		"Data types",
+		(;Name = pluto_link.(definitions[is_datatype]),
+		Dependencies = dependency_list[is_datatype],
+		Prependencies = prependency_list[is_datatype])
+	)
+
 	m = render_variable_table(mod,
+		"Modules",
 		(;Name = pluto_link.(definitions[is_module]),
 		Prependencies = prependency_list[is_module])
 	)
 	
-	v, f, m, topology, updated_notebook_cells, cell_exprs
+	v, f, t, m, topology, updated_notebook_cells, cell_exprs
 end
 
 # ╔═╡ 6d97aaae-f1e4-47e5-a376-19b87f48df7f
-function variable_explorer(old_topology, old_notebook, old_cells, mod; show_type=true)
-	variables, functions, modules, new_topology, new_notebook, new_cells = notebook_topology(
+function variable_explorer(old_topology, old_notebook, old_cells, mod;
+    exclude_dependencies=[Base, Core],
+    show_pluto_modules=false,
+    show_type=true
+)
+	variables, functions, datatypes, modules, new_topology, new_notebook, new_cells = notebook_topology(
 		old_topology, old_notebook, old_cells, mod;
-		show_type
+		show_type, exclude_dependencies, show_pluto_modules
 	)
 	variable_explorer_html = @htl(
 	"""
@@ -271,9 +312,10 @@ function variable_explorer(old_topology, old_notebook, old_cells, mod; show_type
 	
 		<button class="expand-collapse">
 		</button>
-		<h4>Variables</h4>$(variables)
-		<h4>Functions</h4>$(functions)
-		<h4>Modules</h4>$(modules)
+		$(variables)
+		$(functions)
+	    $(datatypes)
+		$(modules)
 	
 		<script>
 		    const left_arrow = `<img src="https://cdn.jsdelivr.net/gh/ionic-team/ionicons@5.5.1/src/svg/arrow-back-outline.svg" style="height: 1.5em; width: 1.5em;">`
@@ -642,6 +684,7 @@ version = "17.4.0+2"
 # ╠═aa0457b7-eb46-416e-8619-5e98babb4c91
 # ╠═4b595e45-2b87-4a9c-bb79-fe558ccbea8a
 # ╠═53a03bbe-eb49-46bd-8a36-6a972e221ba9
+# ╠═d4f46be8-2593-4b78-8873-a5466f46990e
 # ╠═4cc19a3e-9619-4eec-b24a-6a362eb31fce
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
