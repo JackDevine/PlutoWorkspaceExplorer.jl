@@ -14,17 +14,13 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 384fbd82-8400-4d58-870a-282f7f4f6730
-using PlutoLinks: @revise
-
-# ╔═╡ 3b66f142-647a-4c3e-a650-0a45cbd85701
+# ╔═╡ 83633d03-c6a1-408b-86a4-4ae0bf692eb3
 begin
-	dir = "/root/Projects/PlutoVariableExplorer.jl"  # Change to location where your clone is
-    import Pkg
-	Pkg.add(["HypertextLiteral", "Primes", "Symbolics"])
-    Pkg.activate(dir)
+    using Pkg
+	Pkg.add(url="https://github.com/JackDevine/PlutoVariableExplorer.jl")
+    Pkg.add(["HypertextLiteral", "Primes", "Symbolics"])
 	
-	@revise using PlutoVariableExplorer
+	using PlutoVariableExplorer
 	const PVE = PlutoVariableExplorer
 	using HypertextLiteral, Primes, Symbolics
 end
@@ -34,13 +30,17 @@ md"""
 ## Uncomment these two cells for development
 """
 
-# ╔═╡ 83633d03-c6a1-408b-86a4-4ae0bf692eb3
+# ╔═╡ 384fbd82-8400-4d58-870a-282f7f4f6730
+# using PlutoLinks: @revise
+
+# ╔═╡ 3b66f142-647a-4c3e-a650-0a45cbd85701
 # begin
-#     using Pkg
-# 	Pkg.add(url="https://github.com/JackDevine/PlutoVariableExplorer.jl")
-#     Pkg.add(["HypertextLiteral", "Primes", "Symbolics"])
+# 	dir = "/root/Projects/PlutoVariableExplorer.jl"  # Change to location where your clone is
+#     import Pkg
+# 	Pkg.add(["HypertextLiteral", "Primes", "Symbolics"])
+#     Pkg.activate(dir)
 	
-# 	using PlutoVariableExplorer
+# 	@revise using PlutoVariableExplorer
 # 	const PVE = PlutoVariableExplorer
 # 	using HypertextLiteral, Primes, Symbolics
 # end
@@ -90,11 +90,7 @@ prime_product_error(n) = prod(p^2/(p^2-1) for p in primes(n)) - π^2/6
 product_error = prime_product_error(n)
 
 # ╔═╡ a476b103-a9df-4256-a0c5-78abbae10ffa
-let
-	workspace_name = Symbol("workspace#$(PlutoRunner.moduleworkspace_count.x)")
-	ws = getfield(Main, workspace_name)
-	contains(string(nameof(PVE.symbol_module(:n, ws))), "workspace#")
-end
+struct MyNewDataType end
 
 # ╔═╡ Cell order:
 # ╟─8a5ec35c-b235-412b-9cb5-17514736a31c
