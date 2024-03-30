@@ -23,7 +23,7 @@ function update_notebook()
 	document.addEventListener("keydown", (e) => {
 	    if (e.key == "Enter" && e.shiftKey) {
 	        console.log("Shift enter")
-	        span.value = editor_state.notebook.cell_inputs
+	        span.value = nothing
 			span.dispatchEvent(new CustomEvent("input"))
 			e.preventDefault()
 	    }
