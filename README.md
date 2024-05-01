@@ -1,4 +1,4 @@
-# PlutoVariableExplorer.jl
+# PlutoWorkspaceExplorer.jl
 
 Interactively inspect your workspace values and topology in a [Pluto](https://github.com/fonsp/Pluto.jl) session.
 
@@ -6,17 +6,17 @@ Interactively inspect your workspace values and topology in a [Pluto](https://gi
 
 Create the following cells:
 ```julia
-import PlutoVariableExplorer as PVE
+import PlutoWorkspaceExplorer as PWE
 ```
 ```julia
-@bind _update PVE.update_notebook()
+@bind _update PWE.update_notebook()
 ```
 ```
-_update; PVE.variable_explorer(PlutoRunner)
+_update; PWE.variable_explorer(PlutoRunner)
 ```
-If you dont create the `_update` variable, then the variable explorer will only be updated when you run the cell that defined it. The `update_variable` will change every time that you press Shift+Enter.
+If you dont create the `_update` variable, then the workspace explorer will only be updated when you run the cell that defined it. The `update_variable` will change every time that you press Shift+Enter.
 
-Example view of the variable explorer:
+Example view of the workspace explorer:
 ![image](https://github.com/JackDevine/PlutoVariableExplorer.jl/assets/8610352/dc1f6cb2-2cef-47ca-b9ea-d9f1e1802fdc)
 
 https://github.com/JackDevine/PlutoVariableExplorer.jl/assets/8610352/e5a8c622-6086-44c1-a01e-e5965fccbd22
