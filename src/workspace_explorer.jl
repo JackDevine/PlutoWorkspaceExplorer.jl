@@ -100,12 +100,25 @@ end
 
 # ╔═╡ aa0457b7-eb46-416e-8619-5e98babb4c91
 begin
-	get_pluto_link_str(s) = """<a href="#$s"><span class="ͼo ͼ12">$s</span></a>"""
+	function get_pluto_link_str(s)
+		se = HTTP.escapeuri(s)
+		"""
+		<a href="#$se"
+		   onclick="event.preventDefault();
+		            console.log(event.target.closest(&quot;[data-cell-variable]&quot;));
+		            document.querySelector(&quot;[id='$se']&quot;).scrollIntoView(
+		                {behavior: 'smooth', block: 'center'}
+		            )"><span class="ͼo ͼ12">$s</span></a>"""
+	end
 	
-	function pluto_link(sym)
+	function pluto_link(sym, ws::Module)
 		s = string(sym)
-		pluto_link_str = get_pluto_link_str(s)
-		HTML(pluto_link_str)
+		if defined_in_notebook(sym, ws)
+			pluto_link_str = get_pluto_link_str(s)
+			HTML(pluto_link_str)
+		else
+			@htl("""<pre class="no-block"><code>$s</code></span>""")
+		end
 	end
 	
 	function pluto_link(sym, t)

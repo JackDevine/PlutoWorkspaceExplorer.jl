@@ -24,14 +24,9 @@ begin
 	using HypertextLiteral, Primes, Symbolics
 end
 
-# ╔═╡ 8a5ec35c-b235-412b-9cb5-17514736a31c
-md"""
-## Uncomment these two cells for development
-"""
-
 # ╔═╡ 44a6a78e-e6a3-4957-9549-84d192a11d83
 md"""
-Using the variable explorer is a two step process. First, bind a variable to the `update_notebook` event. Then create a cell depending on the `update_notebook` event and start a variable explorer in that cell.
+Using the workspace explorer is a two step process. First, bind a variable to the `update_notebook` event. Then create a cell depending on the `update_notebook` event and start a workspace explorer in that cell using the `workspace_explorer(PlutoRunner)` function.
 """
 
 # ╔═╡ 236ffc2b-6a2e-4023-b9dd-6d34ea2c5d4d
@@ -77,7 +72,6 @@ product_error = prime_product_error(n)
 struct MyNewDataType end
 
 # ╔═╡ Cell order:
-# ╟─8a5ec35c-b235-412b-9cb5-17514736a31c
 # ╠═83633d03-c6a1-408b-86a4-4ae0bf692eb3
 # ╟─44a6a78e-e6a3-4957-9549-84d192a11d83
 # ╠═236ffc2b-6a2e-4023-b9dd-6d34ea2c5d4d
