@@ -84,13 +84,13 @@ begin
 end
 
 # ╔═╡ 6b2ccb16-7e54-4d07-b5be-134b6127b45d
-function variable_explorer(mod; args...)
+function workspace_explorer(mod; args...)
 	cell_exprs = Expr[]
 	
 	notebook_cells = SimpleCell[SimpleCell(code) for code in cell_exprs]
     topology = PDE.NotebookTopology{SimpleCell}()
 
-	variable_explorer(topology, notebook_cells, cell_exprs, mod; args...)[1]
+	workspace_explorer(topology, notebook_cells, cell_exprs, mod; args...)[1]
 end
 
 # ╔═╡ 7e63e520-7d60-4b6e-8668-b4efa4577948
@@ -151,7 +151,6 @@ function notebook_topology(old_topology, old_notebook, old_cells, mod;
 	cell_exprs = [expr.expanded_expr
 	              for expr in values(mod.cell_expanded_exprs)]
 	updated_cell_exprs = setdiff(cell_exprs, old_cells)
-	deleted_cells = setdiff(old_cells, cell_exprs)
 	
 	updated_notebook_cells = SimpleCell[SimpleCell(code) for code in updated_cell_exprs]
 	
@@ -270,7 +269,7 @@ function notebook_topology(old_topology, old_notebook, old_cells, mod;
 end
 
 # ╔═╡ 6d97aaae-f1e4-47e5-a376-19b87f48df7f
-function variable_explorer(old_topology, old_notebook, old_cells, mod;
+function workspace_explorer(old_topology, old_notebook, old_cells, mod;
     exclude_dependencies=[Base, Core],
     show_pluto_modules=false,
     show_type=true
@@ -279,7 +278,7 @@ function variable_explorer(old_topology, old_notebook, old_cells, mod;
 		old_topology, old_notebook, old_cells, mod;
 		show_type, exclude_dependencies, show_pluto_modules
 	)
-	variable_explorer_html = @htl(
+	workspace_explorer_html = @htl(
 	"""
 	<span class="aside">
 		<style>
@@ -339,7 +338,7 @@ function variable_explorer(old_topology, old_notebook, old_cells, mod;
 		</script>
 	</span>
 	""")
-	variable_explorer_html, new_topology, new_notebook, new_cells
+	workspace_explorer_html, new_topology, new_notebook, new_cells
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
