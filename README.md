@@ -21,3 +21,5 @@ Example view of the workspace explorer:
 
 https://github.com/JackDevine/PlutoVariableExplorer.jl/assets/8610352/e5a8c622-6086-44c1-a01e-e5965fccbd22
 
+## License
+MIT license, see [LICENSE](LICENSE)
