@@ -10,6 +10,7 @@ begin
 	import PlutoDependencyExplorer as PDE
 	import ExpressionExplorer as EE
 	import Tables
+	import HTTP
 	using PlutoUI
 end
 
@@ -98,6 +99,29 @@ function get_function_definitions(cell)
 	cell.funcdefs_without_signatures
 end
 
+# ╔═╡ 4b595e45-2b87-4a9c-bb79-fe558ccbea8a
+function variable_table(cols...)
+	col_names = collect(first.(cols))
+	Tables.MatrixTable(col_names,
+		Dict(c => i for (i, c) in enumerate(col_names)),
+		hcat([c[2] for c in cols]...)
+	)
+end
+
+# ╔═╡ 53a03bbe-eb49-46bd-8a36-6a972e221ba9
+function symbol_module(s, ws)
+	try
+		which(ws, s)
+	catch
+		Main
+	end
+end
+
+# ╔═╡ ff53c258-443f-4914-b5e7-7f3fc83f43e6
+function defined_in_notebook(sym, ws)
+	contains(string(symbol_module(sym, ws)), "Main.var")
+end
+
 # ╔═╡ aa0457b7-eb46-416e-8619-5e98babb4c91
 begin
 	function get_pluto_link_str(s)
@@ -126,24 +150,6 @@ begin
 
 		pluto_link_str = get_pluto_link_str(s)
 		HTML(pluto_link_str*"""<span class="ͼo ͼ14">::</span><span class="ͼo ͼ13">$(t)</span>""")
-	end
-end
-
-# ╔═╡ 4b595e45-2b87-4a9c-bb79-fe558ccbea8a
-function variable_table(cols...)
-	col_names = collect(first.(cols))
-	Tables.MatrixTable(col_names,
-		Dict(c => i for (i, c) in enumerate(col_names)),
-		hcat([c[2] for c in cols]...)
-	)
-end
-
-# ╔═╡ 53a03bbe-eb49-46bd-8a36-6a972e221ba9
-function symbol_module(s, ws)
-	try
-		which(ws, s)
-	catch
-		Main
 	end
 end
 
@@ -222,8 +228,8 @@ function notebook_topology(old_topology, old_notebook, old_cells, mod;
 		for (k, v) in dependencies
 	)
 	
-	dependency_list = [pluto_link.(get(dependencies, def, Set(Symbol[]))) for def in definitions]
-	prependency_list = [pluto_link.(get(prependencies, def, Set(Symbol[]))) for def in definitions]
+	dependency_list = [pluto_link.(get(dependencies, def, Set(Symbol[])), [ws]) for def in definitions]
+	prependency_list = [pluto_link.(get(prependencies, def, Set(Symbol[])), [ws]) for def in definitions]
 
 	is_variable = fill(false, size(definitions))
 	is_function = copy(is_variable)
@@ -245,7 +251,7 @@ function notebook_topology(old_topology, old_notebook, old_cells, mod;
 	variable_definition_html = if show_type
 		pluto_link.(definitions[is_variable], typeof.(variables[is_variable]))
 	else
-		pluto_link.(definitions[is_variable])
+		pluto_link.(definitions[is_variable], [ws])
 	end
 
 	# TODO add a new category for DataType
@@ -260,21 +266,21 @@ function notebook_topology(old_topology, old_notebook, old_cells, mod;
 
 	f = render_variable_table(mod,
 		"Functions/macros",
-		(;Name = pluto_link.(definitions[is_function]),
+		(;Name = pluto_link.(definitions[is_function], [ws]),
 		Dependencies = dependency_list[is_function],
 		Prependencies = prependency_list[is_function])
 	)
 
 	t = render_variable_table(mod,
 		"Data types",
-		(;Name = pluto_link.(definitions[is_datatype]),
+		(;Name = pluto_link.(definitions[is_datatype], [ws]),
 		Dependencies = dependency_list[is_datatype],
 		Prependencies = prependency_list[is_datatype])
 	)
 
 	m = render_variable_table(mod,
 		"Modules",
-		(;Name = pluto_link.(definitions[is_module]),
+		(;Name = pluto_link.(definitions[is_module], [ws]),
 		Prependencies = prependency_list[is_module])
 	)
 	
@@ -358,6 +364,7 @@ end
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 ExpressionExplorer = "21656369-7473-754a-2065-74616d696c43"
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 HypertextLiteral = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
 PlutoDependencyExplorer = "72656b73-756c-7461-726b-72656b6b696b"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
@@ -365,6 +372,7 @@ Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 
 [compat]
 ExpressionExplorer = "~1.0.0"
+HTTP = "~1.10.6"
 HypertextLiteral = "~0.9.5"
 PlutoDependencyExplorer = "~1.0.3"
 PlutoUI = "~0.7.58"
@@ -377,7 +385,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.1"
 manifest_format = "2.0"
-project_hash = "fdda830f6b1896ec713f00f9293b576e23373c59"
+project_hash = "315d8c938326afb3dd5ff45930b85d9bd9afad64"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -395,6 +403,17 @@ uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
+[[deps.BitFlags]]
+git-tree-sha1 = "2dc09997850d68179b69dafb58ae806167a32b1b"
+uuid = "d1d4a3ce-64b1-5f1a-9ba4-7e7e69966f35"
+version = "0.1.8"
+
+[[deps.CodecZlib]]
+deps = ["TranscodingStreams", "Zlib_jll"]
+git-tree-sha1 = "59939d8a997469ee05c4b4944560a820f9ba0d73"
+uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
+version = "0.7.4"
+
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
 git-tree-sha1 = "eb7f0f8307f71fac7c606984ea5fb2817275d6e4"
@@ -405,6 +424,12 @@ version = "0.11.4"
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
 version = "1.1.0+0"
+
+[[deps.ConcurrentUtilities]]
+deps = ["Serialization", "Sockets"]
+git-tree-sha1 = "6cbbd4d241d7e6579ab354737f4dd95ca43946e1"
+uuid = "f0e56b4a-5159-44fe-b623-3e5288b988bb"
+version = "2.4.1"
 
 [[deps.DataAPI]]
 git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
@@ -425,6 +450,12 @@ deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
 uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 version = "1.6.0"
 
+[[deps.ExceptionUnwrapping]]
+deps = ["Test"]
+git-tree-sha1 = "dcb08a0d93ec0b1cdc4af184b26b591e9695423a"
+uuid = "460bff9d-24e4-43bc-9d9f-a8973cb893f4"
+version = "0.1.10"
+
 [[deps.ExpressionExplorer]]
 git-tree-sha1 = "bce17cd0180a75eec637d6e3f8153011b8bdb25a"
 uuid = "21656369-7473-754a-2065-74616d696c43"
@@ -438,6 +469,12 @@ deps = ["Statistics"]
 git-tree-sha1 = "335bfdceacc84c5cdf16aadc768aa5ddfc5383cc"
 uuid = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
 version = "0.8.4"
+
+[[deps.HTTP]]
+deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapping", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
+git-tree-sha1 = "2c3ec1f90bb4a8f7beafb0cffea8a4c3f4e636ab"
+uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+version = "1.10.6"
 
 [[deps.Hyperscript]]
 deps = ["Test"]
@@ -465,6 +502,12 @@ uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
 version = "1.0.0"
+
+[[deps.JLLWrappers]]
+deps = ["Artifacts", "Preferences"]
+git-tree-sha1 = "7e5d6779a1e09a36db2a7b6cff50942a0a7d0fca"
+uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
+version = "1.5.0"
 
 [[deps.JSON]]
 deps = ["Dates", "Mmap", "Parsers", "Unicode"]
@@ -506,6 +549,12 @@ uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
+[[deps.LoggingExtras]]
+deps = ["Dates", "Logging"]
+git-tree-sha1 = "c1dd6d7978c12545b4179fb6153b9250c96b0075"
+uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
+version = "1.0.3"
+
 [[deps.MIMEs]]
 git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
 uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
@@ -514,6 +563,12 @@ version = "0.1.4"
 [[deps.Markdown]]
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
+
+[[deps.MbedTLS]]
+deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "NetworkOptions", "Random", "Sockets"]
+git-tree-sha1 = "c067a280ddc25f196b5e7df3877c6b226d390aaf"
+uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
+version = "1.1.9"
 
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -535,6 +590,18 @@ version = "1.2.0"
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
 version = "0.3.23+4"
+
+[[deps.OpenSSL]]
+deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
+git-tree-sha1 = "38cb508d080d21dc1128f7fb04f20387ed4c0af4"
+uuid = "4d8831e6-92b7-49fb-bdf8-b643e874388c"
+version = "1.4.3"
+
+[[deps.OpenSSL_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "3da7367955dcc5c54c1ba4d402ccdc09a1a3e046"
+uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
+version = "3.0.13+1"
 
 [[deps.OrderedCollections]]
 git-tree-sha1 = "dfdf5519f235516220579f949664f1bf44e741c5"
@@ -600,6 +667,11 @@ version = "0.7.0"
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 
+[[deps.SimpleBufferStream]]
+git-tree-sha1 = "874e8867b33a00e784c8a7e4b60afe9e037b74e1"
+uuid = "777ac1f9-54b0-4bf8-805c-2214025038e7"
+version = "1.1.0"
+
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
@@ -643,6 +715,15 @@ version = "1.10.0"
 [[deps.Test]]
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[[deps.TranscodingStreams]]
+git-tree-sha1 = "71509f04d045ec714c4748c785a59045c3736349"
+uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
+version = "0.10.7"
+weakdeps = ["Random", "Test"]
+
+    [deps.TranscodingStreams.extensions]
+    TestExt = ["Test", "Random"]
 
 [[deps.Tricks]]
 git-tree-sha1 = "eae1bb484cd63b36999ee58be2de6c178105112f"
@@ -693,6 +774,7 @@ version = "17.4.0+2"
 # ╠═f4558a2f-c73e-4ecb-8431-5efb39627084
 # ╠═b9bc658e-50a7-4860-b848-e8cda7f93e11
 # ╠═7e63e520-7d60-4b6e-8668-b4efa4577948
+# ╠═ff53c258-443f-4914-b5e7-7f3fc83f43e6
 # ╠═aa0457b7-eb46-416e-8619-5e98babb4c91
 # ╠═4b595e45-2b87-4a9c-bb79-fe558ccbea8a
 # ╠═53a03bbe-eb49-46bd-8a36-6a972e221ba9
