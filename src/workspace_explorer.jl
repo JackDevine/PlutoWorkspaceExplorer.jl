@@ -260,28 +260,28 @@ function notebook_topology(old_topology, old_notebook, old_cells, mod;
 		"Variables",
 		(;Name = variable_definition_html,
 		Value = variables[is_variable],
-		Dependencies = dependency_list[is_variable],
-		Prependencies = prependency_list[is_variable])
+		var"Parent objects" = dependency_list[is_variable],
+		var"Child objects" = prependency_list[is_variable])
 	)
 
 	f = render_variable_table(mod,
 		"Functions/macros",
 		(;Name = pluto_link.(definitions[is_function], [ws]),
-		Dependencies = dependency_list[is_function],
-		Prependencies = prependency_list[is_function])
+		var"Parent objects" = dependency_list[is_function],
+		var"Child objects" = prependency_list[is_function])
 	)
 
 	t = render_variable_table(mod,
 		"Data types",
 		(;Name = pluto_link.(definitions[is_datatype], [ws]),
-		Dependencies = dependency_list[is_datatype],
-		Prependencies = prependency_list[is_datatype])
+		var"Parent objects" = dependency_list[is_datatype],
+		var"Child objects" = prependency_list[is_datatype])
 	)
 
 	m = render_variable_table(mod,
 		"Modules",
 		(;Name = pluto_link.(definitions[is_module], [ws]),
-		Prependencies = prependency_list[is_module])
+		var"Child objects" = prependency_list[is_module])
 	)
 	
 	v, f, t, m, topology, updated_notebook_cells, cell_exprs
