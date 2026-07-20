@@ -22,14 +22,18 @@ end
 
 # ╔═╡ 44a6a78e-e6a3-4957-9549-84d192a11d83
 md"""
-Using the workspace explorer is a two step process. First, bind a variable to the `update_notebook` event. Then create a cell depending on the `update_notebook` event and start a workspace explorer in that cell using the `workspace_explorer(PlutoRunner)` function.
+Using the workspace explorer is a **one step** process: just call `@workspace_explorer` in a single cell. It updates automatically every time you run a cell (press `Shift+Enter`).
+
+For keyword arguments (`show_type`, `exclude_dependencies`, `show_pluto_modules`), use the two-cell setup shown below, calling `workspace_explorer(PlutoRunner; ...)` directly.
 """
 
 # ╔═╡ 236ffc2b-6a2e-4023-b9dd-6d34ea2c5d4d
-@bind _update PWE.update_notebook()
+PWE.@workspace_explorer PlutoRunner
 
 # ╔═╡ 5ccaeff5-96f2-4f3a-a4b8-a58d8192bbda
-_update; PWE.workspace_explorer(PlutoRunner)
+# Optional: the explicit two-cell setup, useful for passing keyword arguments.
+# @bind _update PWE.update_notebook()
+# _update; PWE.workspace_explorer(PlutoRunner)
 
 # ╔═╡ 9c13c584-a912-4f41-91d4-682398219895
 x = 4
@@ -77,7 +81,7 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
 HypertextLiteral = "~0.9.5"
-PlutoWorkspaceExplorer = "~0.2.0"
+PlutoWorkspaceExplorer = "~0.3.0"
 Primes = "~0.5.6"
 Symbolics = "~5.28.0"
 """

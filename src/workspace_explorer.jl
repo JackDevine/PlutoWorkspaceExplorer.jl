@@ -42,9 +42,25 @@ th(n) = @htl("""<th>$n</th>""")
 td(n) = @htl("""<td><div><pre class="no-block">$n</pre></div></td>""")
 
 # ╔═╡ 90298b52-5ce2-4d9b-af79-427dc4f9c401
+# Wrap a value for Pluto's interactive multimedia viewer (images, arrays, tables, ...)
+# so it can be embedded inside HTML output. On Pluto <= 0.19.x this is the
+# exported `PlutoRunner.embed_display`; on Pluto 1.0.x that function was removed
+# (see AbstractPlutoDingetjes.Display.@embed), but the `EmbeddableDisplay` struct
+# that powers it still exists, so we construct it directly. This keeps the
+# explorer working on both old and new Pluto versions.
+function _embed_display(mod, x)
+	if isdefined(mod, :embed_display)
+		mod.embed_display(x)
+	elseif isdefined(mod, :EmbeddableDisplay)
+		mod.EmbeddableDisplay(x, join(rand('a':'z', 16)))
+	else
+		x
+	end
+end
+
 function render_variable_table_row(mod, ind, data...)
 	@htl("""
-	<tr>$((td(mod.embed_display(data[j][ind])) for j in eachindex(data)))</tr>
+	<tr>$((td(_embed_display(mod, data[j][ind])) for j in eachindex(data)))</tr>
 	""")
 end
 
@@ -92,6 +108,102 @@ function workspace_explorer(mod; args...)
     topology = PDE.NotebookTopology{SimpleCell}()
 
 	workspace_explorer(topology, notebook_cells, cell_exprs, mod; args...)[1]
+end
+
+# ╔═╡ 8e5b3e20-7654-4210-988d-93f5b9c81c2a
+# "Trigger" element: a hidden widget whose bound value is bumped to `null` every
+# time the user runs a cell (Shift+Enter). Used together with the
+# self-referencing `@bind` produced by `@workspace_explorer`, this makes the
+# explorer update live from a *single* cell (see GitHub issue #3).
+function _workspace_explorer_with_trigger(mod; args...)
+	@htl("""
+	<span>
+	<script>
+		// Re-evaluate this cell whenever the user runs any cell (Shift+Enter).
+		let span = currentScript.parentElement
+		let onKey = (e) => {
+			if (e.key == "Enter" && e.shiftKey) {
+				span.value = null
+				span.dispatchEvent(new CustomEvent("input"))
+				e.preventDefault()
+			}
+		}
+		document.addEventListener("keydown", onKey)
+		// The cell re-runs on every update, so we must clean up our listener to
+		// avoid stacking one keydown handler per run.
+		invalidation.then(() => document.removeEventListener("keydown", onKey))
+		span.value = null
+	</script>
+	$(workspace_explorer(mod; args...))
+	</span>
+	""")
+end
+
+# ╔═╡ fbc47ed4-2e58-4d44-b6f0-0e29d01a4b2f
+"""
+    @workspace_explorer [mod]
+
+Show the workspace explorer in a **single cell** that updates automatically every time
+you run a cell (press Shift+Enter). This bundles the "trigger" that used to
+require a separate `@bind _update PWE.update_notebook()` cell into the explorer
+itself (see [issue #3](https://github.com/JackDevine/PlutoWorkspaceExplorer.jl/issues/3)).
+
+# Example
+
+```julia
+import PlutoWorkspaceExplorer as PWE
+```
+
+```julia
+PWE.@workspace_explorer PlutoRunner
+```
+
+This single cell is equivalent to the older two-cell setup
+
+```julia
+@bind _update PWE.update_notebook()
+```
+```julia
+_update; PWE.workspace_explorer(PlutoRunner)
+```
+
+For keyword arguments (`show_type`, `exclude_dependencies`,
+`show_pluto_modules`), keep using the two-cell pattern with
+`workspace_explorer(mod; ...)`.
+
+# How it works
+
+`@workspace_explorer PlutoRunner` expands (roughly) to
+
+```julia
+@bind _pwe_update begin
+    # a conditional self-reference: this is what makes the cell re-run whenever
+    # the bound value changes, while still working on the very first run (before
+    # `_pwe_update` exists)
+    isdefined(@__MODULE__, :_pwe_update) ? _pwe_update : nothing
+    PlutoWorkspaceExplorer._workspace_explorer_with_trigger(PlutoRunner)
+end
+```
+
+The returned widget listens for Shift+Enter and sets its own bound value, which
+re-triggers the cell (a cell referencing its own bound variable is allowed by
+Pluto), re-rendering the explorer with the current workspace state.
+"""
+macro workspace_explorer(mod)
+	trigger = :_pwe_update
+	# conditional self-reference: tolerates `_pwe_update` being undefined on the
+	# first run, while still registering it as a reactive dependency of the cell.
+	self_reference = Expr(:if,
+		Expr(:call, :isdefined,
+			Expr(:macrocall, Symbol("@__MODULE__"), __source__),
+			QuoteNode(trigger)),
+		trigger,
+		:nothing)
+	call = Expr(:call,
+		GlobalRef(PlutoWorkspaceExplorer, :_workspace_explorer_with_trigger),
+		mod)
+	block = Expr(:block, self_reference, call)
+	return esc(Expr(:macrocall, Symbol("@bind"), __source__, trigger, block))
 end
 
 # ╔═╡ 7e63e520-7d60-4b6e-8668-b4efa4577948
