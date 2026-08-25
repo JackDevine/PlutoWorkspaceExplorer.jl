@@ -15,12 +15,13 @@
 #
 # The benchmark simulates incremental notebook updates by generating synthetic
 # cell expressions and measuring PlutoDependencyExplorer's updated_topology.
-#=##############################################################################
+=##############################################################################
 
 using Printf
 using Random
-using PlutoDependencyExplorer
-using ExpressionExplorer
+import PlutoDependencyExplorer as PDE
+import ExpressionExplorer as EE
+using Dates
 
 # -----------------------------------------------------------------------------
 # Synthetic data generation
@@ -28,7 +29,7 @@ using ExpressionExplorer
 
 """Generate a synthetic cell expression defining `n` unique variables."""
 function gen_cell_expr(n::Int, seed_vars::Vector{Symbol}=Symbol[])
-    vars = [Symbol("x_$(rand(0x0000:0xffff), hex)") for _ in 1:n]
+    vars = [Symbol("x_$(rand(UInt16))") for _ in 1:n]
     exprs = [Expr(:(=), v, rand()) for v in vars]
     length(exprs) == 1 && return exprs[1]
     return Expr(:block, exprs...)
@@ -40,7 +41,7 @@ function gen_notebook_spec(n_cells::Int, vars_per_cell::Int)
 end
 
 """A struct mimicking SimpleCell for benchmarking the topology pipeline."""
-struct BenchCell
+struct BenchCell <: PDE.AbstractCell
     code::String
     expanded_expr::Expr
 end
@@ -49,8 +50,8 @@ BenchCell(code::Expr) = BenchCell(string(code), code)
 """Compute topology from a list of cell expressions."""
 function compute_topology(cell_exprs::Vector{Expr})
     cells = [BenchCell(ce) for ce in cell_exprs]
-    topo = NotebookTopology{BenchCell}()
-    topo = updated_topology(topo, cells, cells;
+    topo = PDE.NotebookTopology{BenchCell}()
+    topo = PDE.updated_topology(topo, cells, cells;
         get_code_str = c -> c.code,
         get_code_expr = c -> c.expanded_expr,
     )
@@ -58,10 +59,10 @@ function compute_topology(cell_exprs::Vector{Expr})
 end
 
 """Incrementally update topology with new cells."""
-function incremental_update(old_cells::Vector{BenchCell}, old_topo::NotebookTopology, new_cell_exprs::Vector{Expr})
+function incremental_update(old_cells::Vector{BenchCell}, old_topo::PDE.NotebookTopology, new_cell_exprs::Vector{Expr})
     new_cells = [BenchCell(ce) for ce in new_cell_exprs]
     all_cells = [old_cells; new_cells]
-    topo = updated_topology(old_topo, all_cells, new_cells;
+    topo = PDE.updated_topology(old_topo, all_cells, new_cells;
         get_code_str = c -> c.code,
         get_code_expr = c -> c.expanded_expr,
     )
@@ -129,10 +130,9 @@ end
 function main()
     println("=" ^ 72)
     println("PlutoWorkspaceExplorer.jl — Topology Cache Benchmark")
-    println("Date: $(now())")
+    println("Date: $(Dates.now())")
     println("Julia: $(VERSION)")
-    println("PDE: $(pkgversion(PlutoDependencyExplorer))")
-    println(" EE: $(pkgversion(ExpressionExplorer))")
+    println("Julia: $(VERSION)")
     println("=" ^ 72)
 
     all_cold = Float64[]
