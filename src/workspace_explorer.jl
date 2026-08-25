@@ -276,11 +276,28 @@ begin
 		se = HTTP.escapeuri(s)
 		"""
 		<a href="#$se"
-		   onclick="event.preventDefault();
-		            console.log(event.target.closest(&quot;[data-cell-variable]&quot;));
-		            document.querySelector(&quot;[id='$se']&quot;).scrollIntoView(
-		                {behavior: 'smooth', block: 'center'}
-		            )"><span class="ͼo ͼ12">$s</span></a>"""
+		   data-pluto-variable="$s"
+		   onclick="
+				event.preventDefault();
+				// Only follow on Ctrl+Click / Cmd+Click, matching Pluto's own
+				// go-to-definition behavior (see go_to_definition_plugin.js).
+				if (!event.metaKey &amp;&amp; !event.ctrlKey) return;
+				let target = document.querySelector(&quot;[id='$(se)']&quot;);
+				if (!target) return;
+				target.scrollIntoView({behavior: 'smooth', block: 'center'});
+				// Find the Pluto cell containing this variable and dispatch
+				// Pluto's cell_focus event for highlighting / text selection.
+				let cell = target.closest('pluto-cell');
+				if (cell &amp;&amp; cell.id) {
+					window.dispatchEvent(new CustomEvent('cell_focus', {
+						detail: {
+							cell_id: cell.id,
+							line: 0,
+							definition_of: '$s',
+						},
+					}));
+				}
+		   "><span class="ͼo ͼ12">$s</span></a>"""
 	end
 	
 	function pluto_link(sym, ws::Module)
