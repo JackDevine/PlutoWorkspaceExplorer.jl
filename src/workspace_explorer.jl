@@ -101,13 +101,30 @@ begin
 end
 
 # ╔═╡ 6b2ccb16-7e54-4d07-b5be-134b6127b45d
-function workspace_explorer(mod; args...)
-	cell_exprs = Expr[]
-	
-	notebook_cells = SimpleCell[SimpleCell(code) for code in cell_exprs]
-    topology = PDE.NotebookTopology{SimpleCell}()
+begin
+	# Module-level cache for notebook topology state, keyed by workspace module.
+	# Allows incremental updates via PDE.updated_topology instead of recomputing
+	# the full dependency graph on every call (see GitHub issue #2).
+	const _TOPOLOGY_CACHE = Dict{Module, Tuple{PDE.NotebookTopology{SimpleCell}, Vector{SimpleCell}, Vector{Expr}}}()
+end
 
-	workspace_explorer(topology, notebook_cells, cell_exprs, mod; args...)[1]
+function workspace_explorer(mod; args...)
+	state = get(_TOPOLOGY_CACHE, mod, nothing)
+	if state === nothing
+		topology = PDE.NotebookTopology{SimpleCell}()
+		notebook_cells = SimpleCell[]
+		cell_exprs = Expr[]
+	else
+		topology, notebook_cells, cell_exprs = state
+	end
+
+	html, new_topology, new_notebook, new_cells = workspace_explorer(
+		topology, notebook_cells, cell_exprs, mod; args...
+	)
+	if !isempty(new_notebook)
+		_TOPOLOGY_CACHE[mod] = (new_topology, new_notebook, new_cells)
+	end
+	html
 end
 
 # ╔═╡ 8e5b3e20-7654-4210-988d-93f5b9c81c2a
