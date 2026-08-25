@@ -112,27 +112,41 @@ end
 
 # ╔═╡ 8e5b3e20-7654-4210-988d-93f5b9c81c2a
 # "Trigger" element: a hidden widget whose bound value is bumped to `null` every
-# time the user runs a cell (Shift+Enter). Used together with the
-# self-referencing `@bind` produced by `@workspace_explorer`, this makes the
-# explorer update live from a *single* cell (see GitHub issue #3).
+# time a cell runs. Used together with the self-referencing `@bind` produced by
+# `@workspace_explorer`, this makes the explorer update live from a *single* cell
+# (see GitHub issue #3).
+#
+# The trigger fires on:
+#   1. Shift+Enter (direct user cell execution), and
+#   2. Input events from @bind widgets (handles @bind-driven variables, see issue #1).
 function _workspace_explorer_with_trigger(mod; args...)
 	@htl("""
 	<span>
 	<script>
-		// Re-evaluate this cell whenever the user runs any cell (Shift+Enter).
 		let span = currentScript.parentElement
-		let onKey = (e) => {
+
+		function trigger() {
+			span.value = null
+			span.dispatchEvent(new CustomEvent("input"))
+		}
+
+		// Shift+Enter — the user explicitly runs a cell
+		document.addEventListener("keydown", function onKey(e) {
 			if (e.key == "Enter" && e.shiftKey) {
-				span.value = null
-				span.dispatchEvent(new CustomEvent("input"))
+				trigger()
 				e.preventDefault()
 			}
-		}
-		document.addEventListener("keydown", onKey)
-		// The cell re-runs on every update, so we must clean up our listener to
-		// avoid stacking one keydown handler per run.
+		})
 		invalidation.then(() => document.removeEventListener("keydown", onKey))
-		span.value = null
+
+		// @bind widgets (sliders, text inputs, checkboxes) emit `input` events
+		// on document when their value changes — handles @bind-driven variables.
+		document.addEventListener("input", function onInput(e) {
+			// Skip events from our own script to avoid self-triggering.
+			if (e.target.closest("script")) return;
+			trigger()
+		})
+		invalidation.then(() => document.removeEventListener("input", onInput))
 	</script>
 	$(workspace_explorer(mod; args...))
 	</span>
