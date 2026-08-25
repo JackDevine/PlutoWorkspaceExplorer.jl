@@ -118,8 +118,12 @@ function workspace_explorer(mod; args...)
 		topology, notebook_cells, cell_exprs = state
 	end
 
-	html, new_topology, new_notebook, new_cells = workspace_explorer(topology, notebook_cells, cell_exprs, mod; args...)
-	_TOPOLOGY_CACHE[mod] = (new_topology, new_notebook, new_cells)
+	html, new_topology, new_notebook, new_cells = workspace_explorer(
+		topology, notebook_cells, cell_exprs, mod; args...
+	)
+	if !isempty(new_notebook)
+		_TOPOLOGY_CACHE[mod] = (new_topology, new_notebook, new_cells)
+	end
 	html
 end
 
@@ -143,32 +147,16 @@ function _workspace_explorer_with_trigger(mod; args...)
 			span.dispatchEvent(new CustomEvent("input"))
 		}
 
-		// 1) Shift+Enter — direct user execution
+		// Shift+Enter — the user explicitly runs a cell, so we trigger then.
+		// We removed the MutationObserver approach (issue #1) because it caused
+		// infinite feedback loops that re-render blank HTML (see debug comment).
 		document.addEventListener("keydown", function onKey(e) {
 			if (e.key == "Enter" && e.shiftKey) {
 				trigger()
 				e.preventDefault()
 			}
 		})
-
-		// 2) MutationObserver — covers @bind-driven re-executions such as
-		//    sliders, text inputs, checkboxes, etc. We skip mutations inside
-		//    our own output to avoid a feedback loop from re-rendering.
-		let observer = new MutationObserver((mutations) => {
-			for (let m of mutations) {
-				if (span.contains(m.target)) continue
-				observer._dirty = true
-			}
-			if (observer._dirty) {
-				observer._dirty = false
-				trigger()
-			}
-		})
-		observer.observe(document.body, { childList: true, subtree: true })
-
-		invalidation.then(() => {
-			observer.disconnect()
-		})
+		invalidation.then(() => document.removeEventListener("keydown", onKey))
 	</script>
 	$(workspace_explorer(mod; args...))
 	</span>

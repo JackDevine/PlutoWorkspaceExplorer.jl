@@ -18,11 +18,7 @@ end
 
 # ╔═╡ 83633d03-c6a1-408b-86a4-4ae0bf692eb3
 begin
-	import Pkg
-	Pkg.activate("..")
-	Pkg.add(["PlutoUI", "HypertextLiteral", "Primes"])
     import PlutoWorkspaceExplorer as PWE
-	using PlutoUI
 	using HypertextLiteral, Primes#, Symbolics
 end
 
@@ -35,9 +31,6 @@ For keyword arguments (`show_type`, `exclude_dependencies`, `show_pluto_modules`
 
 # ╔═╡ 236ffc2b-6a2e-4023-b9dd-6d34ea2c5d4d
 PWE.@workspace_explorer PlutoRunner
-
-# ╔═╡ 3c94ce11-9ae5-48e8-babe-d6a2d38f7636
-# PWE.workspace_explorer(PlutoRunner)
 
 # ╔═╡ 5ccaeff5-96f2-4f3a-a4b8-a58d8192bbda
 # Optional: the explicit two-cell setup, useful for passing keyword arguments.
@@ -63,7 +56,7 @@ text = "Hello!"
 h = @htl("""<h1 style="color: green">$(text)</h1>""")
 
 # ╔═╡ b78b421f-3daa-40d6-9732-bedb0595acec
-# @syms α::Real β::Real
+@syms α::Real β::Real
 
 # ╔═╡ 56e65b46-c7a6-4cad-b73a-b0810b887db6
 😀 = "Emojis are fine too 😀"
@@ -77,12 +70,6 @@ prime_product_error(n) = prod(p^2/(p^2-1) for p in primes(n)) - π^2/6
 # ╔═╡ 1fc0f0d8-4217-4d8c-b55b-3be30ae88f0b
 product_error = prime_product_error(n)
 
-# ╔═╡ 3f3b0925-c5d7-43aa-9065-7a83d40b90be
-@bind sld Slider(LinRange(-1, 1, 10))
-
-# ╔═╡ 6018b69c-67b4-4bea-b377-78d5a0ca1a70
-sld
-
 # ╔═╡ a476b103-a9df-4256-a0c5-78abbae10ffa
 struct MyNewDataType end
 
@@ -90,7 +77,6 @@ struct MyNewDataType end
 # ╠═83633d03-c6a1-408b-86a4-4ae0bf692eb3
 # ╟─44a6a78e-e6a3-4957-9549-84d192a11d83
 # ╠═236ffc2b-6a2e-4023-b9dd-6d34ea2c5d4d
-# ╠═3c94ce11-9ae5-48e8-babe-d6a2d38f7636
 # ╠═5ccaeff5-96f2-4f3a-a4b8-a58d8192bbda
 # ╠═0bdfc314-20aa-41ac-aaf2-da1187a76a67
 # ╠═77d3c0a6-e76e-4d2e-8eb0-bd36c88a6f1e
@@ -103,6 +89,4 @@ struct MyNewDataType end
 # ╠═fe6a966e-235f-463f-98c4-327072ecaf3d
 # ╠═1249e460-9ca4-4a6e-b302-3380e7c1e989
 # ╠═1fc0f0d8-4217-4d8c-b55b-3be30ae88f0b
-# ╠═3f3b0925-c5d7-43aa-9065-7a83d40b90be
-# ╠═6018b69c-67b4-4bea-b377-78d5a0ca1a70
 # ╠═a476b103-a9df-4256-a0c5-78abbae10ffa

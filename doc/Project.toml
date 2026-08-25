@@ -1,0 +1,4 @@
+[deps]
+HypertextLiteral = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Primes = "27ebfcd6-29c5-5fa9-bf4b-fb8fc14df3ae"
