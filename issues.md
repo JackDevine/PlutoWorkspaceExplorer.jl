@@ -2,9 +2,50 @@
 
 Below is a consolidated list of issues identified from reading the source code and documentation. Each issue is numbered for easy reference.
 
+## Status legend
+- ✅ **Fixed** — committed in a dedicated branch
+- ⬜ Open — not yet addressed
+
 ---
 
-## Issue 1: `@workspace_explorer` macro cannot pass keyword arguments
+## [GitHub Issue #1](https://github.com/JackDevine/PlutoWorkspaceExplorer.jl/issues/1) — Handle bound variables ✅
+
+**Status**: ✅ Fixed on branch `fix-issue-1`
+
+**Problem**: The explorer only updates when the user presses Shift+Enter, but variables defined through the `@bind` macro (sliders, text inputs, etc.) change interactively without Shift+Enter, and the explorer doesn't reflect those changes.
+
+**Fix**: Added a `MutationObserver` inside `_workspace_explorer_with_trigger` that watches the document body for Pluto cell-output DOM mutations. When any cell re-evaluates (regardless of trigger), the observer bumps the bound value to trigger a re-render. The observer skips mutations within the explorer's own output span and is disconnected on cell invalidation to prevent feedback loops.
+
+---
+
+## [GitHub Issue #2](https://github.com/JackDevine/PlutoWorkspaceExplorer.jl/issues/2) — Make updates more efficient ✅
+
+**Status**: ✅ Fixed on branch `fix-issue-2`
+
+**Problem**: Every call to `workspace_explorer(mod)` started with empty topology/cells and recomputed the full dependency graph from scratch.
+
+**Fix**: Added a module-level `_TOPOLOGY_CACHE` (`Dict{Module, Tuple}`) that stores the last `(topology, notebook_cells, cell_exprs)` per module. The 1-arg convenience method now reads from this cache and passes it to `notebook_topology` for incremental `updated_topology`, then stores the result back.
+
+**Benchmark**: `benchmark/benchmark.jl` measures cold (full rebuild) vs warm (cache hit / incremental update) performance across small, medium, and large synthetic notebook scenarios using `PlutoDependencyExplorer`.
+
+---
+
+## [GitHub Issue #4](https://github.com/JackDevine/PlutoWorkspaceExplorer.jl/issues/4) — Links work like main notebook ✅
+
+**Status**: ✅ Fixed on branch `fix-issue-4`
+
+**Problem**: Ctrl-clicking a variable in the main notebook smoothly scrolls to center it and selects the definition text. The explorer's variable links jumped instantly to the top of the page, required no modifier key, and provided no text selection/highlighting.
+
+**Fix**:
+1. Ctrl/Cmd+Click is now required to follow a link (matching Pluto's native behavior).
+2. After smooth-scrolling, the defining `<pluto-cell>` is found via `closest('pluto-cell')`.
+3. Pluto's `cell_focus` custom event is dispatched, triggering the same text selection/highlighting logic the main notebook uses.
+
+---
+
+## Issue 1: `@workspace_explorer` macro cannot pass keyword arguments ⬜
+
+**Status**: ⬜ Open
 
 **File**: `src/workspace_explorer.jl`, lines 192–207
 
@@ -17,6 +58,8 @@ The macro expands to a `@bind` block that calls `_workspace_explorer_with_trigge
 ---
 
 ## Issue 2: One-argument `workspace_explorer` starts from empty state every time
+
+**Status**: ✅ Fixed (GitHub Issue #2)
 
 **File**: `src/workspace_explorer.jl`, lines 104–111
 
@@ -37,7 +80,9 @@ This convenience method always starts with **empty** topology, empty notebook ce
 
 ---
 
-## Issue 3: `notebook_topology` accesses Pluto-internal fields that may change between versions
+## Issue 3: `notebook_topology` accesses Pluto-internal fields that may change between versions ⬜
+
+**Status**: ⬜ Open
 
 **File**: `src/workspace_explorer.jl`, lines 282–283
 
@@ -60,7 +105,9 @@ workspace_name = Symbol("workspace#$(mod.moduleworkspace_count.x)")
 
 ---
 
-## Issue 4: Heuristic string-based checks are fragile
+## Issue 4: Heuristic string-based checks are fragile ⬜
+
+**Status**: ⬜ Open
 
 **File**: `src/workspace_explorer.jl`
 
@@ -76,7 +123,9 @@ Several functions use string matching to determine module membership:
 
 ---
 
-## Issue 5: Variable type classification is based on `isa` checks, missing edge cases
+## Issue 5: Variable type classification is based on `isa` checks, missing edge cases ⬜
+
+**Status**: ⬜ Open
 
 **File**: `src/workspace_explorer.jl`, lines 346–360
 
@@ -109,7 +158,9 @@ end
 
 ---
 
-## Issue 6: `_embed_display` triple-branched fallback may miss some Pluto versions
+## Issue 6: `_embed_display` triple-branched fallback may miss some Pluto versions ⬜
+
+**Status**: ⬜ Open
 
 **File**: `src/workspace_explorer.jl`, lines 51–59
 
@@ -133,7 +184,9 @@ This tries three strategies for embedding values in HTML output. The first branc
 
 ---
 
-## Issue 7: Tables.jl compatibility and the `variable_table` helper
+## Issue 7: Tables.jl compatibility and the `variable_table` helper ⬜
+
+**Status**: ⬜ Open
 
 **File**: `src/workspace_explorer.jl`, lines 215–221
 
@@ -155,7 +208,9 @@ This function is never actually used in the current code — the `render_variabl
 
 ---
 
-## Issue 8: Collapse/expand toggle width comparison uses string equality
+## Issue 8: Collapse/expand toggle width comparison uses string equality ⬜
+
+**Status**: ⬜ Open
 
 **File**: `src/workspace_explorer.jl`, lines 457–468
 
@@ -182,7 +237,9 @@ The click handler compares `span.style.width` as a string. If any other code or 
 
 ---
 
-## Issue 9: Dependency/prependency graph may double-count or miss symbols
+## Issue 9: Dependency/prependency graph may double-count or miss symbols ⬜
+
+**Status**: ⬜ Open
 
 **File**: `src/workspace_explorer.jl`, lines 320–333
 
@@ -207,14 +264,15 @@ Also, multiple variables that depend on the same module name will all show the s
 
 ## Summary
 
-| # | Area | Severity | Description |
-|---|------|----------|-------------|
-| 1 | Macro | **Medium** | `@workspace_explorer` can't pass keyword arguments |
-| 2 | Performance | **Medium** | No incremental state — recomputes everything every call |
-| 3 | Compatibility | **High** | Relies on Pluto internal fields that may change |
-| 4 | Robustness | **Medium** | String-based heuristics for module membership are fragile |
-| 5 | UX | **Low** | Variable classification has edge cases with `nothing` values |
-| 6 | Compatibility | **Medium** | `_embed_display` fallback may fail on some Pluto versions |
-| 7 | Cleanup | **Low** | Unused `variable_table` function and `Tables` dep |
-| 8 | Stability | **Low** | Expand/collapse toggle compares CSS values as strings |
-| 9 | UX | **Low** | Dependency lists mix symbol names and module names |
+| # | Area | Severity | Description | Status |
+|---|------|----------|-------------|--------|
+| — | Trigger | **Medium** | Handle `@bind` variables — explorer doesn't update on interactive cell changes | ✅ `fix-issue-1` |
+| — | Performance | **Medium** | No incremental state — recomputes everything every call | ✅ `fix-issue-2` |
+| — | Links | **Low** | Variable links don't match main notebook (need Ctrl+click, no highlighting) | ✅ `fix-issue-4` |
+| 3 | Compatibility | **High** | Relies on Pluto internal fields that may change | ⬜ Open |
+| 4 | Robustness | **Medium** | String-based heuristics for module membership are fragile | ⬜ Open |
+| 5 | UX | **Low** | Variable classification has edge cases with `nothing` values | ⬜ Open |
+| 6 | Compatibility | **Medium** | `_embed_display` fallback may fail on some Pluto versions | ⬜ Open |
+| 7 | Cleanup | **Low** | Unused `variable_table` function and `Tables` dep | ⬜ Open |
+| 8 | Stability | **Low** | Expand/collapse toggle compares CSS values as strings | ⬜ Open |
+| 9 | UX | **Low** | Dependency lists mix symbol names and module names | ⬜ Open |
