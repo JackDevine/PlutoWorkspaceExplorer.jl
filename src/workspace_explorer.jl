@@ -156,7 +156,20 @@ function _workspace_explorer_with_trigger(mod; args...)
 				e.preventDefault()
 			}
 		})
-		invalidation.then(() => document.removeEventListener("keydown", onKey))
+		invalidation.then(() => {
+			document.removeEventListener("keydown", onKey)
+		})
+
+		// @bind widgets (sliders, text inputs, checkboxes) emit `input` events
+		// on document when their value changes — handles @bind-driven variables.
+		document.addEventListener("input", function onInput(e) {
+			// Skip events from our own script to avoid self-triggering.
+			if (e.target.closest("script")) return;
+			trigger()
+		})
+		invalidation.then(() => {
+			document.removeEventListener("input", onInput)
+		})
 	</script>
 	$(workspace_explorer(mod; args...))
 	</span>
