@@ -101,38 +101,75 @@ begin
 end
 
 # ╔═╡ 6b2ccb16-7e54-4d07-b5be-134b6127b45d
-function workspace_explorer(mod; args...)
-	cell_exprs = Expr[]
-	
-	notebook_cells = SimpleCell[SimpleCell(code) for code in cell_exprs]
-    topology = PDE.NotebookTopology{SimpleCell}()
+begin
+	# Module-level cache for notebook topology state, keyed by workspace module.
+	# Allows incremental updates via PDE.updated_topology instead of recomputing
+	# the full dependency graph on every call (see GitHub issue #2).
+	const _TOPOLOGY_CACHE = Dict{Module, Tuple{PDE.NotebookTopology{SimpleCell}, Vector{SimpleCell}, Vector{Expr}}}()
+end
 
-	workspace_explorer(topology, notebook_cells, cell_exprs, mod; args...)[1]
+function workspace_explorer(mod; args...)
+	state = get(_TOPOLOGY_CACHE, mod, nothing)
+	if state === nothing
+		topology = PDE.NotebookTopology{SimpleCell}()
+		notebook_cells = SimpleCell[]
+		cell_exprs = Expr[]
+	else
+		topology, notebook_cells, cell_exprs = state
+	end
+
+	html, new_topology, new_notebook, new_cells = workspace_explorer(
+		topology, notebook_cells, cell_exprs, mod; args...
+	)
+	if !isempty(new_notebook)
+		_TOPOLOGY_CACHE[mod] = (new_topology, new_notebook, new_cells)
+	end
+	html
 end
 
 # ╔═╡ 8e5b3e20-7654-4210-988d-93f5b9c81c2a
 # "Trigger" element: a hidden widget whose bound value is bumped to `null` every
-# time the user runs a cell (Shift+Enter). Used together with the
-# self-referencing `@bind` produced by `@workspace_explorer`, this makes the
-# explorer update live from a *single* cell (see GitHub issue #3).
+# time a cell runs. Used together with the self-referencing `@bind` produced by
+# `@workspace_explorer`, this makes the explorer update live from a *single* cell
+# (see GitHub issue #3).
+#
+# The trigger fires on:
+#   1. Shift+Enter (direct user cell execution), and
+#   2. Any pluto-cell DOM update (handles @bind-driven variables, see issue #1).
 function _workspace_explorer_with_trigger(mod; args...)
 	@htl("""
 	<span>
 	<script>
-		// Re-evaluate this cell whenever the user runs any cell (Shift+Enter).
 		let span = currentScript.parentElement
-		let onKey = (e) => {
+
+		function trigger() {
+			span.value = null
+			span.dispatchEvent(new CustomEvent("input"))
+		}
+
+		// Shift+Enter — the user explicitly runs a cell, so we trigger then.
+		// We removed the MutationObserver approach (issue #1) because it caused
+		// infinite feedback loops that re-render blank HTML (see debug comment).
+		document.addEventListener("keydown", function onKey(e) {
 			if (e.key == "Enter" && e.shiftKey) {
-				span.value = null
-				span.dispatchEvent(new CustomEvent("input"))
+				trigger()
 				e.preventDefault()
 			}
-		}
-		document.addEventListener("keydown", onKey)
-		// The cell re-runs on every update, so we must clean up our listener to
-		// avoid stacking one keydown handler per run.
-		invalidation.then(() => document.removeEventListener("keydown", onKey))
-		span.value = null
+		})
+		invalidation.then(() => {
+			document.removeEventListener("keydown", onKey)
+		})
+
+		// @bind widgets (sliders, text inputs, checkboxes) emit `input` events
+		// on document when their value changes — handles @bind-driven variables.
+		document.addEventListener("input", function onInput(e) {
+			// Skip events from our own script to avoid self-triggering.
+			if (e.target.closest("script")) return;
+			trigger()
+		})
+		invalidation.then(() => {
+			document.removeEventListener("input", onInput)
+		})
 	</script>
 	$(workspace_explorer(mod; args...))
 	</span>
@@ -240,11 +277,28 @@ begin
 		se = HTTP.escapeuri(s)
 		"""
 		<a href="#$se"
-		   onclick="event.preventDefault();
-		            console.log(event.target.closest(&quot;[data-cell-variable]&quot;));
-		            document.querySelector(&quot;[id='$se']&quot;).scrollIntoView(
-		                {behavior: 'smooth', block: 'center'}
-		            )"><span class="ͼo ͼ12">$s</span></a>"""
+		   data-pluto-variable="$s"
+		   onclick="
+				event.preventDefault();
+				// Only follow on Ctrl+Click / Cmd+Click, matching Pluto's own
+				// go-to-definition behavior (see go_to_definition_plugin.js).
+				if (!event.metaKey &amp;&amp; !event.ctrlKey) return;
+				let target = document.querySelector(&quot;[id='$(se)']&quot;);
+				if (!target) return;
+				target.scrollIntoView({behavior: 'smooth', block: 'center'});
+				// Find the Pluto cell containing this variable and dispatch
+				// Pluto's cell_focus event for highlighting / text selection.
+				let cell = target.closest('pluto-cell');
+				if (cell &amp;&amp; cell.id) {
+					window.dispatchEvent(new CustomEvent('cell_focus', {
+						detail: {
+							cell_id: cell.id,
+							line: 0,
+							definition_of: '$s',
+						},
+					}));
+				}
+		   "><span class="ͼo ͼ12">$s</span></a>"""
 	end
 	
 	function pluto_link(sym, ws::Module)
